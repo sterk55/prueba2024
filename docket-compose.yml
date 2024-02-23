@@ -1,0 +1,43 @@
+#docker-compose up -d
+version: '3'
+services:
+  proxy:
+    image: traefik
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "8080:8080"
+      - "8081:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  app-clientes-service:
+    image: sterk55/app-clientes
+    deploy:
+      replicas: 3
+    expose:
+      - 8080
+    labels:
+      - "traefik.http.routers.clientes.rule=PathPrefix(`/app-clientes`)"
+      - "traefik.http.middlewares.clientes.stripprefix.prefixes=/app-clientes"
+      - "traefik.http.routers.clientes.middlewares=clientes"
+  app-productos-service:
+    image: sterk55/app-productos
+    deploy:
+      replicas: 3
+    expose:
+      - 8080
+    labels:
+      - "traefik.http.routers.productos.rule=PathPrefix(`/app-productos`)"
+      - "traefik.http.middlewares.productos.stripprefix.prefixes=/app-productos"
+      - "traefik.http.routers.productos.middlewares=productos"
+  app-orden-compras-service:
+    image: sterk55/app-orden-compras
+    environment:
+      APP_AUTHORS_URL: http://proxy/app-clientes
+    deploy:
+      replicas: 2
+    expose:
+      - 8080
+    labels:
+      - "traefik.http.routers.orden-compras.rule=PathPrefix(`/app-orden-compras`)"
+      - "traefik.http.middlewares.orden-compras.stripprefix.prefixes=/app-orden-compras"
+      - "traefik.http.routers.orden-compras.middlewares=orden-compras"

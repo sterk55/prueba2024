@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-orden-compras
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-orden-compras
+  template:
+    metadata:
+      labels:
+        app: app-orden-compras
+    spec:
+      containers:
+        - name: app-orden-compras
+          image: sterk55/app-orden-compras
+          env:
+            - name: APP_CLIENTES_URL
+              value: http://app-clientes-service:8080
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-orden-compras-service
+spec:
+  type: ClusterIP
+  selector:
+    app: app-orden-compras
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
